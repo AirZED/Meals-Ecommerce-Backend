@@ -1,4 +1,4 @@
-# Meals Backend Application with Typescript
+# Meals Backend Application with NODE JS
 
 This is a simple Node JS backend application that demonstrates the basic setup and structure of a backend project.
 

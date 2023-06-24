@@ -1,6 +1,7 @@
-const dbConnect = require('./../db');
 const fs = require('fs');
-const Meal = require('../models/mealModel');
+
+
+const Meal = require('./../models/MealModel');
 
 const { fetch } = require('popsicle');
 

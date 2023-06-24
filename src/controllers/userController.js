@@ -1,3 +1,6 @@
-exports.signup = async (req, res, next) => {
-  res.send('Young Man, this shit is working...');
+
+exports.getAllUsers = async (req, res, next) => {
+  try {
+    console.log(User);
+  } catch (error) {}
 };

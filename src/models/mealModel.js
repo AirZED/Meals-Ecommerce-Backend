@@ -5,10 +5,6 @@ const validator = require('validator');
 const MealSchema = new mongoose.Schema(
   {
     name: { type: String, required: [true, 'Meal must have a name'] },
-    amount: {
-      type: Number,
-      required: [true, 'Meal must have an ammount'],
-    },
     price: {
       type: Number,
       required: [true, 'Meal must have a price'],
@@ -16,8 +12,9 @@ const MealSchema = new mongoose.Schema(
     quantity: {
       type: Number,
       required: [true, 'Meal must have a quantity'],
+      default: 1,
     },
-    createdAt: Date,
+    createdAt: { type: Date, value: Date.now() },
     description: String,
     rating: { type: Number, default: 4.5 },
     discountPrice: {

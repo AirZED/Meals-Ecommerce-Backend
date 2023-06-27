@@ -35,10 +35,6 @@ const handleAllErrors = (err, req, res, next) => {
   }
 
   if (process.env.NODE_ENV === 'production') {
-    let error = { ...err };
-
-    console.log(err);
-
     sendProdError(err, res);
     return;
   }

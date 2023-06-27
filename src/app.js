@@ -26,4 +26,5 @@ app.all('*', (req, res, next) => {
 
 // when an error is supplied into the next function, it automatically calls the middleware with 4 parameters
 app.use(handleAllError);
+
 module.exports = app;

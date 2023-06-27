@@ -1,7 +1,7 @@
 // this handles every error thrown at the request and sends this to an error handler
-const catchAsync = async (controllerFn) => {
+const catchAsync = (controllerFn) => {
   return (req, res, next) => {
-    controllerFn().catch(next);
+    controllerFn(req, res, next).catch(next);
   };
 };
 

@@ -28,7 +28,10 @@ const UserSchema = new mongoose.Schema(
         },
       },
     },
+    createdAt: { type: Date, default: Date.now() },
+    passwordChangedAt: Date,
   },
+
   { toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
@@ -45,9 +48,33 @@ UserSchema.pre('save', async function (next) {
   next();
 });
 
+// checkes if password is changed to update passwordChangeAt time
+UserSchema.pre('save', async function (next) {
+  // returns, and leave the middleware if the document is just created or the password is not changed
+  if (!this.isModified('password') || this.isNew) return next();
+
+  // if the password is changed, it sets the passwordchangeAt to this time
+  this.passwordChangedAt = Date.now() - 3000;
+  next();
+});
+
+// funciton to confirm password
 UserSchema.methods.confirmPassword = function (userPassword, dbPassword) {
   const isPassword = bcrypt.compareSync(userPassword, dbPassword);
   return isPassword;
+};
+
+// function to check if password was changed during when jwt was sent
+UserSchema.methods.changePasswordChange = function (JWTExpireTime) {
+  // converts passwordChangeTime to integer and reduces it to milliseconds
+  if (this.passwordChangedAt) {
+    const passwardChangeTime = parseInt(
+      this.passwordChangedAt.getTime() / 1000,
+      10
+    );
+    return passwardChangeTime > JWTExpireTime;
+  }
+  return false;
 };
 
 const User = mongoose.model('User', UserSchema);

@@ -14,9 +14,11 @@ app.use(express.json());
 // Importing RouteHandlers
 const mealRouter = require(`${__dirname}/routes/mealRouter`);
 const userRouter = require(`${__dirname}/routes/userRouter`);
+const cartRouter = require(`${__dirname}/routes/cartRouter`);
 
 app.use('/api/v1/meals', mealRouter);
 app.use('/api/v1/users', userRouter);
+app.use('/api/v1/cart', cartRouter);
 
 // this handle all unavailable routes
 app.all('*', (req, res, next) => {

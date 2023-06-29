@@ -1,5 +1,8 @@
-const User = require('./../models/userModel');
+const { promisify } = require('util');
+const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
+const AppError = require('../utils/appError');
+const catchAsync = require('../utils/catchAsync');
 
 // function to sign token
 const signToken = (id) => {
@@ -10,71 +13,85 @@ const signToken = (id) => {
   return token;
 };
 
-exports.signup = async (req, res, next) => {
-  try {
-    const createdUser = await User.create({
-      password: req.body.password,
-      email: req.body.email,
-      passwordConfirm: req.body.passwordConfirm,
-    });
+exports.signup = catchAsync(async (req, res, next) => {
+  const createdUser = await User.create({
+    password: req.body.password,
+    email: req.body.email,
+    passwordConfirm: req.body.passwordConfirm,
+  });
 
-    // hash and return token with jwt
-    const token = signToken(createdUser._id);
-
-    res.status(200).json({
-      status: 'success',
-      token,
-      data: {
-        user: createdUser,
-      },
-    });
-  } catch (error) {
-    res.status(500).json({
-      status: 'failed',
-      message: 'This error happened suring startup',
-    });
+  if (!createdUser) {
+    return next(new AppError('Error signing up', 500));
   }
-};
 
-exports.login = async (req, res, next) => {
-  try {
-    const { email, password } = req.body;
+  // hash and return token with jwt
+  const token = signToken(createdUser._id);
 
-    if (!email.trim() || !password.trim()) {
-      throw new Error('Enter valid email or password');
-    }
-    // check if user email exist
-    const user = await User.findOne({ email }).select('+password');
+  res.status(200).json({
+    status: 'success',
+    token,
+    data: {
+      user: createdUser,
+    },
+  });
+});
 
-    if (!user) {
-      throw new Error('User does not exist, signup');
-    }
+exports.login = catchAsync(async (req, res, next) => {
+  const { email, password } = req.body;
 
-    // unhash password and be sure it matches
-    if (!user || !user.confirmPassword(password, user.password)) {
-      throw new Error('Wrong email or password');
-    }
-    // sign a jwt
-    const token = signToken(user._id);
-    res.status(201).json({
-      status: 'success',
-      token,
-      data: {
-        user,
-      },
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      status: 'failed',
-      message: 'Error happened during login',
-    });
+  if (!email.trim() || !password.trim()) {
+    return next(new AppError('Enter valid email or password', 400));
   }
-};
+  // check if user email exist
+  const user = await User.findOne({ email }).select('+password');
 
-exports.protectSensitiveRoute = async (req, res, next) => {
+  if (!user) {
+    return next(new AppError('User does not exist, signup', 404));
+  }
+
+  // unhash password and be sure it matches
+  if (!user || !user.confirmPassword(password, user.password)) {
+    return next(new AppError('Wrong email or password', 400));
+  }
+  // sign a jwt
+  const token = signToken(user._id);
+
+  res.status(201).json({
+    status: 'success',
+    token,
+    data: {
+      user,
+    },
+  });
+});
+
+exports.protectSensitiveRoute = catchAsync(async (req, res, next) => {
   // get the token and check if its exist
+  let token;
+
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith('Bearer')
+  ) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+
+  if (!token) next(new AppError('Please login to continue', 404));
+
   // verification of the token
+  const decoded = await promisify(jwt.verify)(token, process.env.TOKEN_SECRET);
+
   // checking if user was deleted after token was created
-  // checking if user password was changed after reg token was assigned
-};
+  const confirmedUser = await User.findOne({ _id: decoded.id });
+
+  if (!confirmedUser) {
+    return next(new AppError('Invalid request, user has been deleted', 400));
+  }
+
+  // checking if user password was changed after req token was assigned
+
+
+  
+  req.user = confirmedUser;
+  next();
+});

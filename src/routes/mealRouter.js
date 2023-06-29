@@ -8,6 +8,7 @@ Router.route('/').get(mealController.getAllMeals).post(mealController.addMeal);
 
 Router.route('/:id')
   .get(mealController.getSingleMeal)
-  .delete(mealController.deleteMeal);
+  .delete(mealController.deleteMeal)
+  .patch(mealController.updateMeal);
 
 module.exports = Router;

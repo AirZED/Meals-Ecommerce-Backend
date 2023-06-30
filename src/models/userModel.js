@@ -65,7 +65,7 @@ UserSchema.methods.confirmPassword = function (userPassword, dbPassword) {
 };
 
 // function to check if password was changed during when jwt was sent
-UserSchema.methods.changePasswordChange = function (JWTExpireTime) {
+UserSchema.methods.checkPasswordChange = function (JWTExpireTime) {
   // converts passwordChangeTime to integer and reduces it to milliseconds
   if (this.passwordChangedAt) {
     const passwardChangeTime = parseInt(

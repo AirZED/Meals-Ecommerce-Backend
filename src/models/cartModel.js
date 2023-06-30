@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const CartSchema = new mongoose.Schema(
   {
     userId: String,
-    totalPrice: { type: Number, default: this.price * this.quantity },
+    totalPrice: Number,
     meals: { type: Array, default: [] },
     updatedAt: { type: Date, default: Date.now() },
   },

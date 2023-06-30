@@ -89,9 +89,16 @@ exports.protectSensitiveRoute = catchAsync(async (req, res, next) => {
   }
 
   // checking if user password was changed after req token was assigned
+  const isPasswordChanged = confirmedUser.checkPasswordChange(decoded.iat);
 
-
-  
+  if (isPasswordChanged) {
+    return next(
+      new AppError(
+        'Cannot perform request, password was changed amidst operation',
+        400
+      )
+    );
+  }
   req.user = confirmedUser;
   next();
 });

@@ -1,4 +1,5 @@
 const Cart = require('../models/cartModel');
+const mongoose = require('mongoose');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
 const returnResponseFn = require('../utils/returnResponseHandler');
@@ -7,14 +8,17 @@ const returnResponseFn = require('../utils/returnResponseHandler');
 exports.getCartMeals = catchAsync(async (req, res, next) => {
   const userId = req.user.id;
 
-  const cart = await Cart.aggregate({
-    $lookup: {
-      from: 'meals',
-      localField: 'meals',
-      foriegnField: '_id',
-      as: 'cartDetails',
+  const cart = await Cart.aggregate([
+    { $match: { userId: userId } },
+    {
+      $lookup: {
+        from: 'meals',
+        localField: 'meals',
+        foreignField: 'name',
+        as: 'cart',
+      },
     },
-  });
+  ]);
 
   console.log(cart);
   // const [cart] = await Cart.find({ userId }).select('-__v');
@@ -25,7 +29,7 @@ exports.getCartMeals = catchAsync(async (req, res, next) => {
 // edit cart
 exports.updateCart = catchAsync(async (req, res, next) => {
   const userId = req.user.id;
-  const [cart] = await Cart.findOneAndUpdate(
+  const cart = await Cart.findOneAndUpdate(
     { userId },
     { $set: { ...req.body } },
     { upsert: true, returnDocument: 'after' }

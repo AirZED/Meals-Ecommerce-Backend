@@ -8,19 +8,21 @@ const returnResponseFn = require('../utils/returnResponseHandler');
 exports.getCartMeals = catchAsync(async (req, res, next) => {
   const userId = req.user.id;
 
-  const cart = await Cart.aggregate([
+  const [cart] = await Cart.aggregate([
     { $match: { userId: userId } },
     {
       $lookup: {
         from: 'meals',
         localField: 'meals',
-        foreignField: 'name',
-        as: 'cart',
+        foreignField: '_id',
+        as: 'meals',
       },
     },
   ]);
 
-  console.log(cart);
+  // cart.meals = undefined;
+  cart.totalPrice = cart.meals.reduce((prev, curr) => prev + curr.price, 0);
+
   // const [cart] = await Cart.find({ userId }).select('-__v');
   if (!cart) next(new AppError('Cart items not found', 404));
   returnResponseFn(cart, 201, res);
@@ -29,12 +31,16 @@ exports.getCartMeals = catchAsync(async (req, res, next) => {
 // edit cart
 exports.updateCart = catchAsync(async (req, res, next) => {
   const userId = req.user.id;
+  const meals = req.body.meals.map((el) => new mongoose.Types.ObjectId(el));
+  const totalPrice = req.body.totalPrice;
+
   const cart = await Cart.findOneAndUpdate(
     { userId },
-    { $set: { ...req.body } },
+    { $set: { meals, totalPrice } },
     { upsert: true, returnDocument: 'after' }
   ).select('-__v');
 
+  console.log(cart);
   if (!cart) {
     return next(new AppError('No cart has been updated'));
   }
